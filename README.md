@@ -1,95 +1,409 @@
-# URL Shortener API
+# 🔗 URL Shortener with Click Analytics
 
-A backend project built with **Node.js**, **Express**, and **PostgreSQL**.
+A production-ready REST API that converts long URLs into short, shareable links and tracks click analytics using PostgreSQL.
 
-## Features
+**Live API:** https://url-shortener-kj4c.onrender.com
 
-- Shorten long URLs
-- Store URLs in PostgreSQL
-- REST API
-- Cloud database using Neon
+---
 
-## Tech Stack
+## 🚀 Features
 
-- Node.js
-- Express.js
-- PostgreSQL
-- Neon
-- Postman
+* Create short URLs from long URLs
+* Generate unique 6-character short codes
+* Validate URLs before storing them
+* Redirect short URLs to their original destination
+* Track every click
+* Track total clicks
+* View clicks per day
+* Track top referrers
+* PostgreSQL database integration
+* Environment-based configuration
+* RESTful API design
+* Deployed on Render with Neon PostgreSQL
 
-## Project Status
+---
 
-Completed:
-- [x] Project setup
-- [x] PostgreSQL connection
-- [x] Save URLs into database
-- [x] Redirect using short code
-- [x] Click analytics (total clicks, clicks per day, top referrers)
-- [x] Statistics endpoint
-- [x] Deployment on Render
+## 🛠️ Tech Stack
 
-## Run Locally
+* **Runtime:** Node.js
+* **Framework:** Express.js
+* **Database:** PostgreSQL
+* **Database Provider:** Neon
+* **Deployment:** Render
+* **API Testing:** Postman
+* **Version Control:** Git & GitHub
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
+---
 
-2. Create a `.env` file (see `.env.example`) with your Neon connection string:
-   ```
-   DATABASE_URL=postgresql://user:password@host/dbname?sslmode=require
-   ```
+## 📁 Project Structure
 
-3. Create the tables (safe to re-run, it won't touch existing data):
-   ```bash
-   node src/db/migrate.js
-   ```
-
-4. Start the server:
-   ```bash
-   npm run dev
-   ```
-
-## API Reference
-
-### Shorten a URL
-`POST /api/shorten`
-
-```json
-{ "longUrl": "https://example.com/some/very/long/path" }
+```text
+url-shortener/
+│
+├── src/
+│   ├── db/
+│   │   ├── migrate.js
+│   │   ├── pool.js
+│   │   └── schema.sql
+│   │
+│   ├── models/
+│   │   └── urlModel.js
+│   │
+│   ├── routes/
+│   │   ├── redirect.routes.js
+│   │   ├── shorten.routes.js
+│   │   └── stats.routes.js
+│   │
+│   └── app.js
+│
+├── .env.example
+├── .gitignore
+├── package.json
+├── server.js
+└── README.md
 ```
-Returns `201` with the created row (`id`, `short_code`, `long_url`, `created_at`).
 
-### Visit a short URL
-`GET /:shortCode`
+---
 
-Redirects to the original URL and logs a click. `404` if the code doesn't exist.
+## ⚙️ Getting Started
 
-### Get stats for a short URL
-`GET /api/stats/:shortCode`
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/deoreparth700-design/url-shortener.git
+cd url-shortener
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Configure environment variables
+
+Create a `.env` file:
+
+```env
+DATABASE_URL=your_postgresql_connection_string
+```
+
+> Never commit `.env` or expose your database credentials publicly.
+
+### 4. Run database migration
+
+```bash
+node src/db/migrate.js
+```
+
+### 5. Start the server
+
+```bash
+npm start
+```
+
+The API will run locally at:
+
+```text
+http://localhost:3000
+```
+
+---
+
+# 📡 API Documentation
+
+## 1. Create a Short URL
+
+### Request
+
+```http
+POST /api/shorten
+```
+
+### Body
 
 ```json
 {
-  "shortCode": "aZ3kQ1",
-  "longUrl": "https://example.com/some/very/long/path",
-  "totalClicks": 5,
+  "longUrl": "https://www.example.com"
+}
+```
+
+### Example
+
+```bash
+curl -X POST http://localhost:3000/api/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"longUrl":"https://www.example.com"}'
+```
+
+### Response
+
+```json
+{
+  "id": 1,
+  "short_code": "aB3xY9",
+  "long_url": "https://www.example.com"
+}
+```
+
+---
+
+## 2. Redirect to Original URL
+
+Open the generated short URL:
+
+```http
+GET /:shortCode
+```
+
+Example:
+
+```text
+http://localhost:3000/aB3xY9
+```
+
+The server finds the original URL, records the click, and redirects the user.
+
+---
+
+## 3. View Click Analytics
+
+### Request
+
+```http
+GET /api/stats/:shortCode
+```
+
+Example:
+
+```text
+GET /api/stats/aB3xY9
+```
+
+### Response
+
+```json
+{
+  "shortCode": "aB3xY9",
+  "longUrl": "https://www.example.com",
+  "totalClicks": 25,
   "clicksPerDay": [
-    { "date": "2026-08-17T00:00:00.000Z", "clicks": 3 },
-    { "date": "2026-08-16T00:00:00.000Z", "clicks": 2 }
+    {
+      "date": "2026-08-17",
+      "clicks": 10
+    },
+    {
+      "date": "2026-08-18",
+      "clicks": 15
+    }
   ],
   "topReferrers": [
-    { "referrer": "https://twitter.com/", "clicks": 3 },
-    { "referrer": "Direct / Unknown", "clicks": 2 }
+    {
+      "referrer": "https://google.com",
+      "clicks": 12
+    },
+    {
+      "referrer": "https://github.com",
+      "clicks": 8
+    }
   ]
 }
 ```
 
-## Deployment (Render)
+---
 
-1. Push this repo to GitHub (already done — `.env` stays out of git via `.gitignore`).
-2. On [render.com](https://render.com), create a new **Web Service** and connect this repo.
-3. Build command: `npm install`. Start command: `npm start`.
-4. In the Render dashboard, add an environment variable `DATABASE_URL` set to your Neon connection string — never commit this value.
-5. After the first deploy, open the Render **Shell** tab for the service and run `node src/db/migrate.js` once to create the tables (or run it locally against the same database before deploying).
+# 🌐 Production API
 
-> **Already deployed and adding referrer tracking?** Just run `node src/db/migrate.js` again (locally, pointed at your Neon DB, or from Render's Shell tab). It adds the new `referrer` column to your existing `clicks` table without touching any data already there.
+Base URL:
+
+```text
+https://url-shortener-kj4c.onrender.com
+```
+
+### Create URL
+
+```text
+POST https://url-shortener-kj4c.onrender.com/api/shorten
+```
+
+### Redirect
+
+```text
+GET https://url-shortener-kj4c.onrender.com/:shortCode
+```
+
+### Analytics
+
+```text
+GET https://url-shortener-kj4c.onrender.com/api/stats/:shortCode
+```
+
+---
+
+## 🔐 Environment Variables
+
+The application requires:
+
+```env
+DATABASE_URL=
+```
+
+For production, the database connection string is configured through Render environment variables.
+
+**Never commit credentials, passwords, or `.env` files to GitHub.**
+
+---
+
+## 🗄️ Database
+
+The application uses PostgreSQL to store:
+
+* Original URLs
+* Generated short codes
+* Click records
+* Click timestamps
+* Referrer information
+
+Neon provides the production PostgreSQL database.
+
+---
+
+## 🔄 How It Works
+
+```text
+User
+ │
+ │ POST long URL
+ ▼
+Express API
+ │
+ │ Generate unique short code
+ ▼
+PostgreSQL
+ │
+ │ Return short code
+ ▼
+User receives short URL
+ │
+ │ Visit short URL
+ ▼
+Redirect Route
+ │
+ ├── Record click
+ ├── Store timestamp
+ └── Store referrer
+ │
+ ▼
+Original URL
+```
+
+Analytics are generated from the stored click data using PostgreSQL queries.
+
+---
+
+## 📌 Error Handling
+
+The API validates incoming URLs and returns appropriate HTTP status codes.
+
+Examples:
+
+### Missing URL
+
+```json
+{
+  "error": "longUrl is required"
+}
+```
+
+### Invalid URL
+
+```json
+{
+  "error": "longUrl must be a valid absolute URL, e.g. https://example.com"
+}
+```
+
+### Unknown short URL
+
+```json
+{
+  "error": "Short URL not found"
+}
+```
+
+---
+
+## ☁️ Deployment
+
+The application is deployed using **Render**.
+
+Production architecture:
+
+```text
+GitHub
+   │
+   ▼
+Render
+   │
+   ▼
+Node.js + Express
+   │
+   ▼
+Neon PostgreSQL
+```
+
+Pushes to the `main` branch can trigger a new Render deployment when automatic deploys are enabled.
+
+---
+
+## 🧠 Backend Concepts Demonstrated
+
+This project demonstrates practical backend concepts including:
+
+* REST API development
+* Express.js routing
+* HTTP status codes
+* Request validation
+* PostgreSQL schema design
+* SQL aggregation
+* Database queries
+* Environment variables
+* Unique identifier generation
+* Click tracking
+* Analytics queries
+* Error handling
+* Production deployment
+* Git/GitHub workflow
+
+---
+
+## 🔮 Future Improvements
+
+Possible future enhancements:
+
+* Custom aliases
+* URL expiration
+* Rate limiting
+* User authentication
+* Per-user URL management
+* QR code generation
+* Advanced analytics dashboard
+* Redis caching
+* Automated API tests
+* OpenAPI / Swagger documentation
+
+---
+
+## 👨‍💻 Author
+
+**Parth Deore**
+
+B.Tech Computer Science & Engineering
+
+GitHub: https://github.com/deoreparth700-design
+
+---
+
+## 📄 License
+
+This project is available for educational and portfolio purposes.
